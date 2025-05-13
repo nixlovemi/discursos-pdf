@@ -17,11 +17,10 @@ class Speeches
     private const LINE_HEADER_HEIGHT = 10;
     private const LINE_ROW_HEIGHT = 8;
     private const COL_DATE_W = 11;
-    private const COL_SPEECH_W = 89;
-    private const COL_SPEAKER_W = 29;
-    private const COL_CONGREGATION_W = 18;
+    private const COL_SPEECH_W = 100;
     private const COL_PRESIDENT_W = 31;
     private const COL_READER_W = 28;
+    private const COL_HOSPITALITY_W = 36;
 
     public function __construct(
         array $speechData,
@@ -140,14 +139,13 @@ class Speeches
         // $this->_pdf->SetFillColor(164, 202, 175);
       
       	$this->setSubHeaderBg();
-        $this->setFont(17, true);
+        $this->setFont(14, true);
 
         $this->_pdf->Cell(self::COL_DATE_W, self::LINE_ROW_HEIGHT, $brMonthShort, 1, 0, 'C', 1, '', 0);
-        $this->_pdf->Cell(self::COL_SPEECH_W, self::LINE_ROW_HEIGHT, 'Tema', 1, 0, 'C', 1, '', 0);
-        $this->_pdf->Cell(self::COL_SPEAKER_W, self::LINE_ROW_HEIGHT, 'Orador', 1, 0, 'C', 1, '', 0);
-        $this->_pdf->Cell(self::COL_CONGREGATION_W, self::LINE_ROW_HEIGHT, 'Cong.', 1, 0, 'C', 1, '', 0);
+        $this->_pdf->Cell(self::COL_SPEECH_W, self::LINE_ROW_HEIGHT, 'Discurso', 1, 0, 'L', 1, '', 0);
         $this->_pdf->Cell(self::COL_PRESIDENT_W, self::LINE_ROW_HEIGHT, 'Presidente', 1, 0, 'C', 1, '', 0);
         $this->_pdf->Cell(self::COL_READER_W, self::LINE_ROW_HEIGHT, 'Leitor', 1, 0, 'C', 1, '', 0);
+        $this->_pdf->Cell(self::COL_HOSPITALITY_W, self::LINE_ROW_HEIGHT, 'Hospitalidade', 1, 0, 'C', 1, '', 0);
         $this->_pdf->Ln(self::LINE_ROW_HEIGHT);
 
         $this->_lineNbr++;
@@ -160,12 +158,24 @@ class Speeches
 
     private function printRow(array $data): void
     {
-        $this->setFont(13, false);
+        $this->setFont(11, false);
         $this->_pdf->SetTextColor(0, 0, 0);
         $speech = $data['speech'] ?? '';
+        $isSpecial = $this->isSpecialEvent($speech);
+
+        $speechText = $speech;
+        $speechText = str_replace(['"', "'"], '', $speechText);
+        if (!$isSpecial) {
+            $speechText = '"' . $speechText . '"';   
+        }
+
+        $speechText .= "\n" . "    " . $data['speaker'];
+        if ($data['congregation'] !== '') {
+            $speechText .= ' — ' . $data['congregation'];
+        }
 
         // line color
-        if ($this->isSpecialEvent($speech)) {
+        if ($isSpecial) {
             // special event
             $this->setSpecialLineBg();
         } elseif ($this->_lineNbr % 2 == 0) {
@@ -184,10 +194,11 @@ class Speeches
         foreach ([
             $date => self::COL_DATE_W,
             $speech => self::COL_SPEECH_W,
-            $data['speaker'] => self::COL_SPEAKER_W,
-            $data['congregation'] => self::COL_CONGREGATION_W,
+            $speechText => self::COL_SPEECH_W,
+            $data['congregation'] => self::COL_SPEECH_W,
             $data['president'] => self::COL_PRESIDENT_W,
-            $data['reader'] => self::COL_READER_W
+            $data['reader'] => self::COL_READER_W,
+            $data['hospitality'] => self::COL_HOSPITALITY_W,
         ] as $string => $width) {
             $height = $this->_pdf->getStringHeight($width, $string, true);
             if ($height > $rowHeight) {
@@ -198,11 +209,10 @@ class Speeches
         // ====================
 
         $this->_pdf->MultiCell(self::COL_DATE_W, $rowHeight, $date, 1, 'C', 1, 0, '', '', true, 0, false, true);
-        $this->_pdf->MultiCell(self::COL_SPEECH_W, $rowHeight, $speech, 1, 'C', 1, 0, '', '', true, 0, false, true);
-        $this->_pdf->MultiCell(self::COL_SPEAKER_W, $rowHeight, $data['speaker'], 1, 'C', 1, 0, '', '', true, 0, false, true);
-        $this->_pdf->MultiCell(self::COL_CONGREGATION_W, $rowHeight, $data['congregation'], 1, 'C', 1, 0, '', '', true, 0, false, true);
+        $this->_pdf->MultiCell(self::COL_SPEECH_W, $rowHeight, $speechText, 1, 'L', 1, 0, '', '', true, 0, false, true);
         $this->_pdf->MultiCell(self::COL_PRESIDENT_W, $rowHeight, $data['president'], 1, 'C', 1, 0, '', '', true, 0, false, true);
         $this->_pdf->MultiCell(self::COL_READER_W, $rowHeight, $data['reader'], 1, 'C', 1, 0, '', '', true, 0, false, true);
+        $this->_pdf->MultiCell(self::COL_HOSPITALITY_W, $rowHeight, $data['hospitality'], 1, 'C', 1, 0, '', '', true, 0, false, true);
         $this->_pdf->Ln($rowHeight);
 
         $this->_lineNbr++;

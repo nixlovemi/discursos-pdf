@@ -61,6 +61,7 @@ class GoogleClient
             $speech = $row[4] ?? null;
             $president = $row[9] ?? null;
             $reader = $row[10] ?? null;
+            $hospitality = $row[13] ?? null;
 
             $speechData[] = [
                 'date' => $date,
@@ -74,6 +75,7 @@ class GoogleClient
                 'congregation' => $congregation,
                 'president' => $president,
                 'reader' => $reader,
+                'hospitality' => $hospitality,
             ];
         }
 
